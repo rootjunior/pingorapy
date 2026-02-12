@@ -1,6 +1,6 @@
-use pyo3::prelude::*;
 use async_trait::async_trait;
 use pingora::prelude::*;
+use pyo3::prelude::*;
 use std::sync::Arc;
 
 pub struct LB(Arc<LoadBalancer<RoundRobin>>);
@@ -13,10 +13,12 @@ impl ProxyHttp for LB {
         ()
     }
 
-    async fn upstream_peer(&self, _session: &mut Session, _ctx: &mut Self::CTX) -> Result<Box<HttpPeer>> {
-        let upstream = self.0
-            .select(b"", 256)
-            .unwrap();
+    async fn upstream_peer(
+        &self,
+        _session: &mut Session,
+        _ctx: &mut Self::CTX,
+    ) -> Result<Box<HttpPeer>> {
+        let upstream = self.0.select(b"", 256).unwrap();
 
         println!("Upstream peer is: {:?}", upstream);
 
@@ -37,8 +39,8 @@ impl ProxyHttp for LB {
 
 #[pyfunction]
 pub fn run_server(items: Vec<String>) -> PyResult<()> {
-
-    let mut my_server = Server::new(None).map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{e:?}")))?;
+    let mut my_server = Server::new(None)
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{e:?}")))?;
     my_server.bootstrap();
 
     let upstreams = LoadBalancer::try_from_iter(items)
